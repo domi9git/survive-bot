@@ -1,0 +1,14 @@
+[
+	{
+		"stick": {
+			"name": "Stick",
+			"rarity": 0,
+			"desc": "A simple stick, can be used to craft tools."
+		},
+		"rock": {
+			"name": "Rock",
+			"rarity": 0,
+			"desc": "A simple rock, can be used to craft tools."
+		}
+	}
+]

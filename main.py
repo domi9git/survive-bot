@@ -10,8 +10,8 @@ bot = commands.Bot()
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
-@bot.slash_command(description="find stuff in the surrounding area")
-async def find(interaction: nextcord.Interaction, guild_ids=TESTING_GUILD_ID
+@bot.slash_command(description="find stuff in the surrounding area", guild_ids=[TESTING_GUILD_ID])
+async def find(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
     with interaction.channel.typing():
@@ -41,4 +41,21 @@ async def find(interaction: nextcord.Interaction, guild_ids=TESTING_GUILD_ID
                 file.write(json.dumps(dictionary, indent=4))
                 print('db created')
         await interaction.send('done')
+@bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
+async def item(interaction: nextcord.Interaction,
+    item: str = nextcord.SlashOption(
+        name="item",
+        description="name of the item (example: stick)",
+        required=True
+        )
+    ):
+    await interaction.response.defer(with_message=True)
+    with interaction.channel.typing():
+        with open('json/items.json','r') as file:
+            load = json.load(file)
+            if str(item) in load[0]:
+                embed = nextcord.Embed(title=load[0][str(item)]["name"],description=load[0][str(item)]["desc"])
+                await interaction.send(embed=embed)
+            else:
+                await interaction.send('no such item exists')
 bot.run(token)
