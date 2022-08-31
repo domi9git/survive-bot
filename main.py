@@ -54,7 +54,15 @@ async def item(interaction: nextcord.Interaction,
         with open('json/items.json','r') as file:
             load = json.load(file)
             if str(item) in load[0]:
-                embed = nextcord.Embed(title=load[0][str(item)]["name"],description=load[0][str(item)]["desc"])
+                def getcolor():
+                    clr = nextcord.Colour
+                    if load[0][str(item)]["rarity"] == 0:
+                        clr = nextcord.Colour.from_rgb(255,255,255)
+                    elif load[0][str(item)]["rarity"] == 1:
+                        clr = nextcord.Colour.from_rgb(0,255,0)
+                    return clr
+                    
+                embed = nextcord.Embed(title=load[0][str(item)]["name"],description=load[0][str(item)]["desc"],color=getcolor())
                 await interaction.send(embed=embed)
             else:
                 await interaction.send('no such item exists')

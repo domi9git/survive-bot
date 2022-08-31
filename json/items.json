@@ -9,6 +9,11 @@
 			"name": "Rock",
 			"rarity": 0,
 			"desc": "A simple rock, can be used to craft tools."
+		},
+		"uncommon": {
+			"name": "Uncommon Item",
+			"rarity": 1,
+			"desc": "An uncommon item."
 		}
 	}
 ]
