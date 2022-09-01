@@ -59,4 +59,45 @@ async def item(interaction: nextcord.Interaction,
                 await interaction.send(embed=embed)
             else:
                 await interaction.send('no such item exists')
+@bot.slash_command(description="checks your inventory", guild_ids=[TESTING_GUILD_ID])
+async def inv(interaction: nextcord.Interaction,
+    ):
+    await interaction.response.defer(with_message=True)
+    with interaction.channel.typing():
+        userid = interaction.user.id
+        if os.path.exists('json/db.json'):
+            print('db json file exists')
+            with open('json/db.json','r') as file:
+                load = json.load(file)
+                if str(userid) in load[0]:
+                    print('this user is in the db')
+                    text = ""
+                    for i in load[0][str(userid)]["inv"]:
+                        with open('json/items.json','r') as ifile:
+                            iload = json.load(ifile)
+                            text = text + iload[0][i]["name"] + ": "
+                        text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
+                        embed = nextcord.Embed(title="Inventory",description=text)
+                    if text == "":
+                        embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+                    await interaction.send(embed=embed)
+                else:
+                    print('this user isnt in the db, adding...')
+                    with open("json/db.json", "w") as file:
+                        load[0].update({str(userid):{}})
+                        load[0][str(userid)].update({"inv":{}})
+                        load[0][str(userid)].update({"map":{}})
+                        file.write(json.dumps(load, indent=4))
+                        print('this user has now been added')
+        else:
+            with open('json/db.json','w') as file:
+                dictionary = [{
+                    str(userid): {
+                        "inv": {},
+                        "map": {}
+                    }
+                }]
+                file.write(json.dumps(dictionary, indent=4))
+                print('db created')
+        await interaction.send('done')
 bot.run(token)
