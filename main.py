@@ -99,5 +99,17 @@ async def inv(interaction: nextcord.Interaction,
                 }]
                 file.write(json.dumps(dictionary, indent=4))
                 print('db created')
+            with open('json/db.json','r') as file:
+                text = ""
+                load = json.load(file)
+                for i in load[0][str(userid)]["inv"]:
+                    with open('json/items.json','r') as ifile:
+                        iload = json.load(ifile)
+                        text = text + iload[0][i]["name"] + ": "
+                    text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
+                    embed = nextcord.Embed(title="Inventory",description=text)
+                if text == "":
+                    embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+                await interaction.send(embed=embed)
         await interaction.send('done')
 bot.run(token)
