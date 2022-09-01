@@ -3,6 +3,7 @@ import nextcord
 import json
 import os
 from clr import getcolor
+from fnd import findi
 TESTING_GUILD_ID = guild_id  # Replace with your guild ID
 
 bot = commands.Bot()
@@ -23,6 +24,22 @@ async def find(interaction: nextcord.Interaction,
                 load = json.load(file)
                 if str(userid) in load[0]:
                     print('this user is in the db')
+                    item_list = findi()
+                    text = ""
+                    for i in item_list:
+                        with open('json/items.json','r') as ifile:
+                            iload = json.load(ifile)
+                            text = text + iload[0][i]["name"] + "\n"
+                        if i in load[0][str(userid)]["inv"]:
+                            print('yes')
+                            load[0][str(userid)]["inv"][i] += 1
+                        else:
+                            print('no')
+                            load[0][str(userid)]["inv"].update({i:1})
+                    with open("json/db.json", "w") as file:
+                        file.write(json.dumps(load, indent=4))
+                    embed = nextcord.Embed(title="You found:",description=text)
+                    await interaction.send(embed=embed)
                 else:
                     print('this user isnt in the db, adding...')
                     with open("json/db.json", "w") as file:
@@ -31,6 +48,24 @@ async def find(interaction: nextcord.Interaction,
                         load[0][str(userid)].update({"map":{}})
                         file.write(json.dumps(load, indent=4))
                         print('this user has now been added')
+                    with open('json/db.json','r') as file:
+                        load = json.load(file)
+                        text = ""
+                    item_list = findi()
+                    for i in item_list:
+                        with open('json/items.json','r') as ifile:
+                            iload = json.load(ifile)
+                            text = text + iload[0][i]["name"] + "\n"
+                        if i in load[0][str(userid)]["inv"]:
+                            print('yes')
+                            load[0][str(userid)]["inv"][i] += 1
+                        else:
+                            print('no')
+                            load[0][str(userid)]["inv"].update({i:1})
+                    with open("json/db.json", "w") as file:
+                        file.write(json.dumps(load, indent=4))
+                    embed = nextcord.Embed(title="You found:",description=text)
+                    await interaction.send(embed=embed)
         else:
             with open('json/db.json','w') as file:
                 dictionary = [{
@@ -41,7 +76,24 @@ async def find(interaction: nextcord.Interaction,
                 }]
                 file.write(json.dumps(dictionary, indent=4))
                 print('db created')
-        await interaction.send('done')
+            with open('json/db.json','r') as file:
+                load = json.load(file)
+                text = ""
+            item_list = findi()
+            for i in item_list:
+                with open('json/items.json','r') as ifile:
+                    iload = json.load(ifile)
+                    text = text + iload[0][i]["name"] + "\n"
+                if i in load[0][str(userid)]["inv"]:
+                    print('yes')
+                    load[0][str(userid)]["inv"][i] += 1
+                else:
+                    print('no')
+                    load[0][str(userid)]["inv"].update({i:1})
+            with open("json/db.json", "w") as file:
+                file.write(json.dumps(load, indent=4))
+            embed = nextcord.Embed(title="You found:",description=text)
+            await interaction.send(embed=embed)
 @bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
 async def item(interaction: nextcord.Interaction,
     id: str = nextcord.SlashOption(
@@ -89,6 +141,16 @@ async def inv(interaction: nextcord.Interaction,
                         load[0][str(userid)].update({"map":{}})
                         file.write(json.dumps(load, indent=4))
                         print('this user has now been added')
+                        text = ""
+                        for i in load[0][str(userid)]["inv"]:
+                            with open('json/items.json','r') as ifile:
+                                iload = json.load(ifile)
+                                text = text + iload[0][i]["name"] + ": "
+                            text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
+                            embed = nextcord.Embed(title="Inventory",description=text)
+                        if text == "":
+                            embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+                        await interaction.send(embed=embed)
         else:
             with open('json/db.json','w') as file:
                 dictionary = [{
@@ -111,5 +173,4 @@ async def inv(interaction: nextcord.Interaction,
                 if text == "":
                     embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
                 await interaction.send(embed=embed)
-        await interaction.send('done')
 bot.run(token)
