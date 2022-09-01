@@ -44,9 +44,9 @@ async def find(interaction: nextcord.Interaction,
         await interaction.send('done')
 @bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
 async def item(interaction: nextcord.Interaction,
-    item: str = nextcord.SlashOption(
-        name="item",
-        description="name of the item (example: stick)",
+    id: str = nextcord.SlashOption(
+        name="id",
+        description="id of the item (example: stick)",
         required=True
         )
     ):
@@ -54,8 +54,8 @@ async def item(interaction: nextcord.Interaction,
     with interaction.channel.typing():
         with open('json/items.json','r') as file:
             load = json.load(file)
-            if str(item) in load[0]:
-                embed = nextcord.Embed(title=load[0][str(item)]["name"],description=load[0][str(item)]["desc"],color=getcolor(load,item))
+            if str(id) in load[0]:
+                embed = nextcord.Embed(title=load[0][str(id)]["name"],description=load[0][str(id)]["desc"],color=getcolor(load,id))
                 await interaction.send(embed=embed)
             else:
                 await interaction.send('no such item exists')
