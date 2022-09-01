@@ -14,6 +14,26 @@
 			"name": "Uncommon Item",
 			"rarity": 1,
 			"desc": "An uncommon item."
+		},
+		"rare": {
+			"name": "Rare Item",
+			"rarity": 2,
+			"desc": "A rare item."
+		},
+		"epic": {
+			"name": "Epic Item",
+			"rarity": 3,
+			"desc": "An epic item."
+		},
+		"legendary": {
+			"name": "Legendary Item",
+			"rarity": 4,
+			"desc": "A legendary item."
+		},
+		"mythic": {
+			"name": "Mythic Item",
+			"rarity": 5,
+			"desc": "A mythic item."
 		}
 	}
 ]
