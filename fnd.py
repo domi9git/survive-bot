@@ -31,7 +31,7 @@ def findi():
         for i in range(0,10):
             if random.randrange(0,2) == 0:
                 rarities = ["common","uncommon","rare","epic","legendary","mythical"]
-                chances = [60,20,10,5,3,2]
+                chances = [200,75,25,10,5,1]
                 results = random.choices(rarities,chances)
                 print(results)
                 if results[0] == "common":
