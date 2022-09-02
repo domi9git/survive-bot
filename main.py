@@ -14,12 +14,12 @@ bot = commands.Bot()
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
-@bot.slash_command(description="find stuff in the surrounding area")#, guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="find stuff in the surrounding area", guild_ids=[TESTING_GUILD_ID])
 async def find(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
     with interaction.channel.typing():
-        userid = interaction.user.id
+        userid = int(interaction.user.id)
         conn = None
         try:
             conn = sqlite3.connect('db/main.db')
@@ -27,10 +27,13 @@ async def find(interaction: nextcord.Interaction,
             print(sqlite3.version)
             print('connected')
             table = """ CREATE TABLE IF NOT EXISTS users (
-                ID INT
+                id INT UNIQUE ON CONFLICT IGNORE
                 ); """
             cur.execute(table)
             print("table is created")
+            cur.execute("INSERT INTO users(id) values(?)", (userid, ))
+            print('inserted')
+            conn.commit()
         except Error as e:
             print(e)
         finally:
@@ -38,7 +41,7 @@ async def find(interaction: nextcord.Interaction,
                 conn.close()
                 print('disconnected')
         await interaction.send('done')
-@bot.slash_command(description="get item info")#, guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
 async def item(interaction: nextcord.Interaction,
     id: str = nextcord.SlashOption(
         name="id",
@@ -55,7 +58,7 @@ async def item(interaction: nextcord.Interaction,
                 await interaction.send(embed=embed)
             else:
                 await interaction.send('no such item exists')
-@bot.slash_command(description="checks your inventory")#, guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="checks your inventory", guild_ids=[TESTING_GUILD_ID])
 async def inv(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
