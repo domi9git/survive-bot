@@ -14,7 +14,7 @@ bot = commands.Bot()
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
-@bot.slash_command(description="find stuff in the surrounding area", guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="find stuff in the surrounding area") guild_ids=[TESTING_GUILD_ID])
 async def find(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
@@ -26,13 +26,28 @@ async def find(interaction: nextcord.Interaction,
             cur = conn.cursor()
             print(sqlite3.version)
             print('connected')
-            table = """ CREATE TABLE IF NOT EXISTS users (
-                id INT UNIQUE ON CONFLICT IGNORE
+            tableu = """ CREATE TABLE IF NOT EXISTS users (
+                userid TEXT UNIQUE ON CONFLICT IGNORE
                 ); """
-            cur.execute(table)
-            print("table is created")
-            cur.execute("INSERT INTO users(id) values(?)", (userid, ))
-            print('inserted')
+            tableinv = """ CREATE TABLE IF NOT EXISTS inv (
+                itemid INT,
+                count INT,
+                owner TEXT
+                ); """
+            cur.execute(tableu)
+            print("users table is created")
+            cur.execute(tableinv)
+            print("inv table is created")
+            cur.execute("""SELECT userid
+                            FROM users
+                            WHERE userid=?""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            if result:
+                print('userid already exists')
+            else:
+                cur.execute("INSERT INTO users(userid) values(?)", (str(userid), ))
+                print('inserted')
             conn.commit()
         except Error as e:
             print(e)
@@ -41,7 +56,7 @@ async def find(interaction: nextcord.Interaction,
                 conn.close()
                 print('disconnected')
         await interaction.send('done')
-@bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="get item info") guild_ids=[TESTING_GUILD_ID])
 async def item(interaction: nextcord.Interaction,
     id: str = nextcord.SlashOption(
         name="id",
@@ -58,7 +73,7 @@ async def item(interaction: nextcord.Interaction,
                 await interaction.send(embed=embed)
             else:
                 await interaction.send('no such item exists')
-@bot.slash_command(description="checks your inventory", guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="checks your inventory") guild_ids=[TESTING_GUILD_ID])
 async def inv(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
