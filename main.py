@@ -14,8 +14,103 @@ bot = commands.Bot()
 async def on_ready():
     print(f'We have logged in as {bot.user}')
 
-@bot.slash_command(description="find stuff in the surrounding area") guild_ids=[TESTING_GUILD_ID])
+@bot.slash_command(description="find stuff in the surrounding area", guild_ids=[TESTING_GUILD_ID])
 async def find(interaction: nextcord.Interaction,
+    ):
+    await interaction.response.defer(with_message=True)
+    with interaction.channel.typing():
+        userid = int(interaction.user.id)
+        conn = None
+        try:
+            conn = sqlite3.connect('db/main.db')
+            cur = conn.cursor()
+            print(sqlite3.version)
+            print('connected')
+            tableu = """ CREATE TABLE IF NOT EXISTS users (
+                userid TEXT UNIQUE ON CONFLICT IGNORE
+                ); """
+            tableinv = """ CREATE TABLE IF NOT EXISTS inv (
+                itemid TEXT,
+                count INT,
+                owner TEXT
+                ); """
+            cur.execute(tableu)
+            print("users table is created")
+            cur.execute(tableinv)
+            print("inv table is created")
+            cur.execute("""SELECT userid
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            if result:
+                print('userid already exists')
+                items = findi()
+                print(items)
+                txt = ""
+                for i in items:
+                    txt = txt + i + "\n"
+                    cur.execute("""SELECT itemid, owner
+                                    FROM inv
+                                    WHERE itemid=? AND owner=?;""",
+                                    (i,str(userid)))
+                    result = cur.fetchone()
+                    if result:
+                        cur.execute("""UPDATE inv
+                                        SET count = count + 1
+                                        WHERE itemid=? AND owner=?;""",
+                                        (i,str(userid)))
+                    else:
+                        cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
+                embed=nextcord.Embed(title="You found:",description=txt)
+            else:
+                cur.execute("INSERT INTO users(userid) values(?);", (str(userid), ))
+                print('inserted')
+                items = findi()
+                print(items)
+                txt = ""
+                for i in items:
+                    txt = txt + i + "\n"
+                    cur.execute("""SELECT itemid, owner
+                                    FROM inv
+                                    WHERE itemid=? AND owner=?;""",
+                                    (i,str(userid)))
+                    result = cur.fetchone()
+                    if result:
+                        cur.execute("""UPDATE inv
+                                        SET count = count + 1
+                                        WHERE itemid=? AND owner=?;""",
+                                        (i,str(userid)))
+                    else:
+                        cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
+                embed=nextcord.Embed(title="You found:",description=txt)
+            conn.commit()
+        except Error as e:
+            print(e)
+        finally:
+            if conn:
+                conn.close()
+                print('disconnected')
+        await interaction.send(embed=embed)
+@bot.slash_command(description="get item info", guild_ids=[TESTING_GUILD_ID])
+async def item(interaction: nextcord.Interaction,
+    id: str = nextcord.SlashOption(
+        name="id",
+        description="id of the item (example: stick)",
+        required=True
+        )
+    ):
+    await interaction.response.defer(with_message=True)
+    with interaction.channel.typing():
+        with open('json/items.json','r') as file:
+            load = json.load(file)
+            if str(id) in load[0]:
+                embed = nextcord.Embed(title=load[0][str(id)]["name"],description=load[0][str(id)]["desc"],color=getcolor(load,id))
+                await interaction.send(embed=embed)
+            else:
+                await interaction.send('no such item exists')
+@bot.slash_command(description="checks your inventory", guild_ids=[TESTING_GUILD_ID])
+async def inv(interaction: nextcord.Interaction,
     ):
     await interaction.response.defer(with_message=True)
     with interaction.channel.typing():
@@ -45,9 +140,33 @@ async def find(interaction: nextcord.Interaction,
             result = cur.fetchone()
             if result:
                 print('userid already exists')
+                cur.execute("""SELECT *
+                                FROM inv
+                                WHERE owner=?;""",
+                                (str(userid), ))
+                items = cur.fetchall()
+                txt = ""
+                for i in items:
+                    txt = txt + i[0] + ": " + str(i[1]) + "\n"
+                if txt == "":
+                    embed=nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+                else:
+                    embed=nextcord.Embed(title="Inventory",description=txt)
             else:
                 cur.execute("INSERT INTO users(userid) values(?)", (str(userid), ))
                 print('inserted')
+                cur.execute("""SELECT *
+                                FROM inv
+                                WHERE owner=?;""",
+                                (str(userid), ))
+                items = cur.fetchall()
+                txt = ""
+                for i in items:
+                    txt = txt + i[0] + ": " + str(i[1]) + "\n"
+                if txt == "":
+                    embed=nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+                else:
+                    embed=nextcord.Embed(title="Inventory",description=txt)
             conn.commit()
         except Error as e:
             print(e)
@@ -55,84 +174,5 @@ async def find(interaction: nextcord.Interaction,
             if conn:
                 conn.close()
                 print('disconnected')
-        await interaction.send('done')
-@bot.slash_command(description="get item info") guild_ids=[TESTING_GUILD_ID])
-async def item(interaction: nextcord.Interaction,
-    id: str = nextcord.SlashOption(
-        name="id",
-        description="id of the item (example: stick)",
-        required=True
-        )
-    ):
-    await interaction.response.defer(with_message=True)
-    with interaction.channel.typing():
-        with open('json/items.json','r') as file:
-            load = json.load(file)
-            if str(id) in load[0]:
-                embed = nextcord.Embed(title=load[0][str(id)]["name"],description=load[0][str(id)]["desc"],color=getcolor(load,id))
-                await interaction.send(embed=embed)
-            else:
-                await interaction.send('no such item exists')
-@bot.slash_command(description="checks your inventory") guild_ids=[TESTING_GUILD_ID])
-async def inv(interaction: nextcord.Interaction,
-    ):
-    await interaction.response.defer(with_message=True)
-    with interaction.channel.typing():
-        userid = interaction.user.id
-        if os.path.exists('json/db.json'):
-            print('db json file exists')
-            with open('json/db.json','r') as file:
-                load = json.load(file)
-                if str(userid) in load[0]:
-                    print('this user is in the db')
-                    text = ""
-                    for i in load[0][str(userid)]["inv"]:
-                        with open('json/items.json','r') as ifile:
-                            iload = json.load(ifile)
-                            text = text + iload[0][i]["name"] + ": "
-                        text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
-                        embed = nextcord.Embed(title="Inventory",description=text)
-                    if text == "":
-                        embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
-                    await interaction.send(embed=embed)
-                else:
-                    print('this user isnt in the db, adding...')
-                    with open("json/db.json", "w") as file:
-                        load[0].update({str(userid):{}})
-                        load[0][str(userid)].update({"inv":{}})
-                        load[0][str(userid)].update({"map":{}})
-                        file.write(json.dumps(load, indent=4))
-                        print('this user has now been added')
-                        text = ""
-                        for i in load[0][str(userid)]["inv"]:
-                            with open('json/items.json','r') as ifile:
-                                iload = json.load(ifile)
-                                text = text + iload[0][i]["name"] + ": "
-                            text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
-                            embed = nextcord.Embed(title="Inventory",description=text)
-                        if text == "":
-                            embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
-                        await interaction.send(embed=embed)
-        else:
-            with open('json/db.json','w') as file:
-                dictionary = [{
-                    str(userid): {
-                        "inv": {},
-                        "map": {}
-                    }
-                }]
-                file.write(json.dumps(dictionary, indent=4))
-                print('db created')
-            with open('json/db.json','r') as file:
-                text = ""
-                load = json.load(file)
-                for i in load[0][str(userid)]["inv"]:
-                    with open('json/items.json','r') as ifile:
-                        iload = json.load(ifile)
-                        text = text + iload[0][i]["name"] + ": "
-                    text = text + str(load[0][str(userid)]["inv"][i]) + "\n"
-                    embed = nextcord.Embed(title="Inventory",description=text)
-                if text == "":
-                    embed = nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
-                await interaction.send(embed=embed)
+        await interaction.send(embed=embed)
 bot.run(token)
