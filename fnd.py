@@ -33,7 +33,6 @@ def findi():
                 rarities = ["common","uncommon","rare","epic","legendary","mythical"]
                 chances = [200,75,25,10,5,1]
                 results = random.choices(rarities,chances)
-                print(results)
                 if results[0] == "common":
                     item_list.append(random.choice(common))
                 if results[0] == "uncommon":
@@ -46,6 +45,4 @@ def findi():
                     item_list.append(random.choice(legendary))
                 if results[0] == "mythic":
                     item_list.append(random.choice(mythic))
-            else:
-                print("nope")
     return(item_list)
