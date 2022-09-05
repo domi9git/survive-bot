@@ -30,19 +30,19 @@ def findi():
                 mythic.append(i)
         for i in range(0,10):
             if random.randrange(0,2) == 0:
-                rarities = ["common","uncommon","rare","epic","legendary","mythical"]
+                rarities = ["common","uncommon","rare","epic","legendary","mythic"]
                 chances = [200,75,25,10,5,1]
                 results = random.choices(rarities,chances)
-                if results[0] == "common":
+                if results[0] == "common" and common:
                     item_list.append(random.choice(common))
-                if results[0] == "uncommon":
+                if results[0] == "uncommon" and uncommon:
                     item_list.append(random.choice(uncommon))
-                if results[0] == "rare":
+                if results[0] == "rare" and rare:
                     item_list.append(random.choice(rare))
-                if results[0] == "epic":
+                if results[0] == "epic" and epic:
                     item_list.append(random.choice(epic))
-                if results[0] == "legendary":
+                if results[0] == "legendary" and legendary:
                     item_list.append(random.choice(legendary))
-                if results[0] == "mythic":
+                if results[0] == "mythic" and mythic:
                     item_list.append(random.choice(mythic))
     return(item_list)
