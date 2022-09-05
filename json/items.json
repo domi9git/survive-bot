@@ -3,37 +3,37 @@
 		"stick": {
 			"name": "Stick",
 			"rarity": 0,
-			"desc": "A simple stick, can be used to craft tools."
+			"desc": "A simple stick, can be used to craft tools.",
+			"type": "item",
+			"biomes": ["plains","forest"]
 		},
 		"rock": {
 			"name": "Rock",
 			"rarity": 0,
-			"desc": "A simple rock, can be used to craft tools."
+			"desc": "A simple rock, can be used to craft tools.",
+			"type": "item",
+			"biomes": ["plains","forest","desert"]
 		},
-		"uncommon": {
-			"name": "Uncommon Item",
-			"rarity": 1,
-			"desc": "An uncommon item."
+		"vine": {
+			"name": "Vine",
+			"rarity": 0,
+			"desc": "Can be used to link things together.",
+			"type": "item",
+			"biomes": ["plains","forest"]
 		},
-		"rare": {
-			"name": "Rare Item",
-			"rarity": 2,
-			"desc": "A rare item."
+		"fakecb": {
+			"name": "Fake Cheesed Burger",
+			"rarity": 0,
+			"desc": "its a fake! do not trust!",
+			"type": "food",
+			"biomes": []
 		},
-		"epic": {
-			"name": "Epic Item",
-			"rarity": 3,
-			"desc": "An epic item."
-		},
-		"legendary": {
-			"name": "Legendary Item",
-			"rarity": 4,
-			"desc": "A legendary item."
-		},
-		"mythic": {
-			"name": "Mythic Item",
+		"cb": {
+			"name": "Cheesed Burger",
 			"rarity": 5,
-			"desc": "A mythic item."
+			"desc": "cheesed burger",
+			"type": "food",
+			"biomes": []
 		}
 	}
 ]
