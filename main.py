@@ -30,7 +30,8 @@ async def find(interaction: nextcord.Interaction,
             tableu = """ CREATE TABLE IF NOT EXISTS users (
                 userid TEXT UNIQUE ON CONFLICT IGNORE,
                 map_x INT,
-                map_y INT
+                map_y INT,
+                biome TEXT
                 ); """
             tableinv = """ CREATE TABLE IF NOT EXISTS inv (
                 itemid TEXT,
@@ -48,45 +49,27 @@ async def find(interaction: nextcord.Interaction,
             result = cur.fetchone()
             if result:
                 print('userid already exists')
-                items = findi()
-                print(items)
-                txt = ""
-                for i in items:
-                    txt = txt + i + "\n"
-                    cur.execute("""SELECT itemid, owner
-                                    FROM inv
-                                    WHERE itemid=? AND owner=?;""",
-                                    (i,str(userid)))
-                    result = cur.fetchone()
-                    if result:
-                        cur.execute("""UPDATE inv
-                                        SET count = count + 1
-                                        WHERE itemid=? AND owner=?;""",
-                                        (i,str(userid)))
-                    else:
-                        cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
-                embed=nextcord.Embed(title="You found:",description=txt)
             else:
-                cur.execute("INSERT INTO users(userid,map_x,map_y) values(?,?,?);", (str(userid), 8, 4))
+                cur.execute("INSERT INTO users(userid,map_x,map_y,biome) values(?,?,?,?);", (str(userid), 8, 4, "plains"))
                 print('inserted')
-                items = findi()
-                print(items)
-                txt = ""
-                for i in items:
-                    txt = txt + i + "\n"
-                    cur.execute("""SELECT itemid, owner
-                                    FROM inv
+            items = findi()
+            print(items)
+            txt = ""
+            for i in items:
+                txt = txt + i + "\n"
+                cur.execute("""SELECT itemid, owner
+                                FROM inv
+                                WHERE itemid=? AND owner=?;""",
+                                (i,str(userid)))
+                result = cur.fetchone()
+                if result:
+                    cur.execute("""UPDATE inv
+                                    SET count = count + 1
                                     WHERE itemid=? AND owner=?;""",
                                     (i,str(userid)))
-                    result = cur.fetchone()
-                    if result:
-                        cur.execute("""UPDATE inv
-                                        SET count = count + 1
-                                        WHERE itemid=? AND owner=?;""",
-                                        (i,str(userid)))
-                    else:
-                        cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
-                embed=nextcord.Embed(title="You found:",description=txt)
+                else:
+                    cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
+            embed=nextcord.Embed(title="You found:",description=txt)
             conn.commit()
         except Error as e:
             print(e)
@@ -127,7 +110,8 @@ async def inv(interaction: nextcord.Interaction,
             tableu = """ CREATE TABLE IF NOT EXISTS users (
                 userid TEXT UNIQUE ON CONFLICT IGNORE,
                 map_x INT,
-                map_y INT
+                map_y INT,
+                biome TEXT
                 ); """
             tableinv = """ CREATE TABLE IF NOT EXISTS inv (
                 itemid INT,
@@ -145,33 +129,21 @@ async def inv(interaction: nextcord.Interaction,
             result = cur.fetchone()
             if result:
                 print('userid already exists')
-                cur.execute("""SELECT *
-                                FROM inv
-                                WHERE owner=?;""",
-                                (str(userid), ))
-                items = cur.fetchall()
-                txt = ""
-                for i in items:
-                    txt = txt + i[0] + ": " + str(i[1]) + "\n"
-                if txt == "":
-                    embed=nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
-                else:
-                    embed=nextcord.Embed(title="Inventory",description=txt)
             else:
                 cur.execute("INSERT INTO inv(itemid,count,owner) values(?,?,?);", (i,1,str(userid)))
                 print('inserted')
-                cur.execute("""SELECT *
-                                FROM inv
-                                WHERE owner=?;""",
-                                (str(userid), ))
-                items = cur.fetchall()
-                txt = ""
-                for i in items:
-                    txt = txt + i[0] + ": " + str(i[1]) + "\n"
-                if txt == "":
-                    embed=nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
-                else:
-                    embed=nextcord.Embed(title="Inventory",description=txt)
+            cur.execute("""SELECT *
+                            FROM inv
+                            WHERE owner=?;""",
+                            (str(userid), ))
+            items = cur.fetchall()
+            txt = ""
+            for i in items:
+                txt = txt + i[0] + ": " + str(i[1]) + "\n"
+            if txt == "":
+                embed=nextcord.Embed(title="Inventory",description="you have nothing in your inventory")
+            else:
+                embed=nextcord.Embed(title="Inventory",description=txt)
             conn.commit()
         except Error as e:
             print(e)
@@ -195,7 +167,8 @@ async def map(interaction: nextcord.Interaction,
             tableu = """ CREATE TABLE IF NOT EXISTS users (
                 userid TEXT UNIQUE ON CONFLICT IGNORE,
                 map_x INT,
-                map_y INT
+                map_y INT,
+                biome TEXT
                 ); """
             tableinv = """ CREATE TABLE IF NOT EXISTS inv (
                 itemid TEXT,
@@ -213,64 +186,38 @@ async def map(interaction: nextcord.Interaction,
             result = cur.fetchone()
             if result:
                 print('userid already exists')
-                cur.execute("""SELECT map_x, map_y
-                                FROM users
-                                WHERE userid=?;""",
-                                (str(userid), ))
-                result = cur.fetchone()
-                if result:
-                    px_list = getloc(result[0],result[1])
-                    txt = ""
-                    newline = 0
-                    for n in px_list:
-                        if n == "plains":
-                            txt = txt + ":green_square:"
-                            newline += 1
-                        if n == "river":
-                            txt = txt + ":blue_square:"
-                            newline += 1
-                        if n == "forest":
-                            txt = txt + ":deciduous_tree:"
-                            newline += 1
-                        if n == "desert":
-                            txt = txt + ":yellow_square:"
-                            newline += 1
-                        if n == "void":
-                            txt = txt + ":black_large_square:"
-                            newline += 1
-                        if newline == 5:
-                            txt = txt + "\n"
-                            newline = 0
-                    embed=nextcord.Embed(title="Map",description=txt)
             else:
-                cur.execute("INSERT INTO users(userid,map_x,map_y) values(?,?,?);", (str(userid), 8, 1))
+                cur.execute("INSERT INTO users(userid,map_x,map_y,biome) values(?,?,?,?);", (str(userid), 8, 4, "plains"))
                 print('inserted')
-                cur.execute("""SELECT map_x, map_y
-                                FROM users
-                                WHERE userid=?;""",
-                                (str(userid), ))
-                result = cur.fetchone()
-                if result:
-                    px_list = getloc(result[0],result[1])
-                    txt = ""
-                    newline = 0
-                    for n in px_list:
-                        if n == "plains":
-                            txt = txt + ":green_square:"
-                            newline += 1
-                        if n == "river":
-                            txt = txt + ":blue_square:"
-                            newline += 1
-                        if n == "forest":
-                            txt = txt + ":deciduous_tree:"
-                            newline += 1
-                        if n == "desert":
-                            txt = txt + ":yellow_square:"
-                            newline += 1
-                        if newline == 5:
-                            txt = txt + "\n"
-                            newline = 0
-                    embed=nextcord.Embed(title="Map",description=txt)
+            cur.execute("""SELECT map_x, map_y
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            if result:
+                px_list = getloc(result[0],result[1])
+                txt = ""
+                newline = 0
+                for n in px_list:
+                    if n == "plains":
+                        txt = txt + ":green_square:"
+                        newline += 1
+                    if n == "river":
+                        txt = txt + ":blue_square:"
+                        newline += 1
+                    if n == "forest":
+                        txt = txt + ":deciduous_tree:"
+                        newline += 1
+                    if n == "desert":
+                        txt = txt + ":yellow_square:"
+                        newline += 1
+                    if n == "void":
+                        txt = txt + ":black_large_square:"
+                        newline += 1
+                    if newline == 5:
+                        txt = txt + "\n"
+                        newline = 0
+                embed=nextcord.Embed(title="Map",description=txt)
             conn.commit()
         except Error as e:
             print(e)
@@ -299,7 +246,8 @@ async def move(interaction: nextcord.Interaction,
             tableu = """ CREATE TABLE IF NOT EXISTS users (
                 userid TEXT UNIQUE ON CONFLICT IGNORE,
                 map_x INT,
-                map_y INT
+                map_y INT,
+                biome TEXT
                 ); """
             tableinv = """ CREATE TABLE IF NOT EXISTS inv (
                 itemid TEXT,
@@ -317,58 +265,58 @@ async def move(interaction: nextcord.Interaction,
             result = cur.fetchone()
             if result:
                 print('userid already exists')
-                if direction == "north" or direction == "up":
-                    cur.execute("""UPDATE users
-                                    SET map_y = map_y - 1
-                                    WHERE userid = ?;""",
-                                    (str(userid), ))
-                elif direction == "south" or direction == "down":
-                    cur.execute("""UPDATE users
-                                    SET map_y = map_y + 1
-                                    WHERE userid = ?;""",
-                                    (str(userid), ))
-                elif direction == "east" or direction == "right":
-                    cur.execute("""UPDATE users
-                                    SET map_x = map_x + 1
-                                    WHERE userid = ?;""",
-                                    (str(userid), ))
-                elif direction == "west" or direction == "left":
-                    cur.execute("""UPDATE users
-                                    SET map_x = map_x - 1
-                                    WHERE userid = ?;""",
-                                    (str(userid), ))
-                cur.execute("""SELECT map_x, map_y
-                                FROM users
-                                WHERE userid=?;""",
-                                (str(userid), ))
-                result = cur.fetchone()
-                if result:
-                    px_list = getloc(result[0],result[1])
-                    txt = ""
-                    newline = 0
-                    for n in px_list:
-                        if n == "plains":
-                            txt = txt + ":green_square:"
-                            newline += 1
-                        if n == "river":
-                            txt = txt + ":blue_square:"
-                            newline += 1
-                        if n == "forest":
-                            txt = txt + ":deciduous_tree:"
-                            newline += 1
-                        if n == "desert":
-                            txt = txt + ":yellow_square:"
-                            newline += 1
-                        if n == "void":
-                            txt = txt + ":black_large_square:"
-                            newline += 1
-                        if newline == 5:
-                            txt = txt + "\n"
-                            newline = 0
-                    embed=nextcord.Embed(title="Map",description=txt)
             else:
-                cur.execute("INSERT INTO users(userid,map_x,map_y) values(?,?,?);", (str(userid), 8, 1))
+                cur.execute("INSERT INTO users(userid,map_x,map_y,biome) values(?,?,?,?);", (str(userid), 8, 4, "plains"))
                 print('inserted')
+            if direction == "north" or direction == "up":
+                cur.execute("""UPDATE users
+                                SET map_y = map_y - 1
+                                WHERE userid = ?;""",
+                                (str(userid), ))
+            elif direction == "south" or direction == "down":
+                cur.execute("""UPDATE users
+                                SET map_y = map_y + 1
+                                WHERE userid = ?;""",
+                                (str(userid), ))
+            elif direction == "east" or direction == "right":
+                cur.execute("""UPDATE users
+                                SET map_x = map_x + 1
+                                WHERE userid = ?;""",
+                                (str(userid), ))
+            elif direction == "west" or direction == "left":
+                cur.execute("""UPDATE users
+                                SET map_x = map_x - 1
+                                WHERE userid = ?;""",
+                                (str(userid), ))
+            cur.execute("""SELECT map_x, map_y
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            if result:
+                px_list = getloc(result[0],result[1])
+                txt = ""
+                newline = 0
+                for n in px_list:
+                    if n == "plains":
+                        txt = txt + ":green_square:"
+                        newline += 1
+                    if n == "river":
+                        txt = txt + ":blue_square:"
+                        newline += 1
+                    if n == "forest":
+                        txt = txt + ":deciduous_tree:"
+                        newline += 1
+                    if n == "desert":
+                        txt = txt + ":yellow_square:"
+                        newline += 1
+                    if n == "void":
+                        txt = txt + ":black_large_square:"
+                        newline += 1
+                    if newline == 5:
+                        txt = txt + "\n"
+                        newline = 0
+                embed=nextcord.Embed(title="Map",description=txt)
             conn.commit()
         except Error as e:
             print(e)
