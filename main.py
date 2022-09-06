@@ -7,6 +7,7 @@ from fnd import findi
 from map import getloc
 import sqlite3
 from sqlite3 import Error
+from PIL import Image
 TESTING_GUILD_ID = guild_id  # Replace with your guild ID
 
 bot = commands.Bot()
@@ -52,7 +53,48 @@ async def find(interaction: nextcord.Interaction,
             else:
                 cur.execute("INSERT INTO users(userid,map_x,map_y,biome) values(?,?,?,?);", (str(userid), 8, 4, "plains"))
                 print('inserted')
-            items = findi()
+            cur.execute("""SELECT map_x, map_y
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchall()
+            if result:
+                im = Image.open(r"map/map.png")
+                im = im.convert('RGBA')
+                px = im.load()
+                color = im.getpixel((result[0][0],result[0][1]))
+                if result[0][0] < 0 or result[0][0] > im.size[0] or result[0][1] < 0 or result[0][1] > im.size[1]:
+                    cur.execute("""UPDATE users
+                                    SET biome = "void"
+                                    WHERE userid=?;""",
+                                    (str(userid), ))
+                else:
+                    if color == (0,255,33,255):
+                        cur.execute("""UPDATE users
+                                        SET biome = "plains"
+                                        WHERE userid=?;""",
+                                        (str(userid), ))
+                    elif color == (0,38,255,255):
+                        cur.execute("""UPDATE users
+                                        SET biome = "river"
+                                        WHERE userid=?;""",
+                                        (str(userid), ))
+                    elif color == (0,127,14,255):
+                        cur.execute("""UPDATE users
+                                        SET biome = "forest"
+                                        WHERE userid=?;""",
+                                        (str(userid), ))
+                    elif color == (255,216,0,255):
+                        cur.execute("""UPDATE users
+                                        SET biome = "desert"
+                                        WHERE userid=?;""",
+                                        (str(userid), ))
+            cur.execute("""SELECT biome
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            items = findi(result)
             print(items)
             txt = ""
             for i in items:
