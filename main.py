@@ -279,4 +279,102 @@ async def map(interaction: nextcord.Interaction,
                 conn.close()
                 print('disconnected')
         await interaction.send(embed=embed)
+@bot.slash_command(description="move in the direction you specify", guild_ids=[TESTING_GUILD_ID])
+async def move(interaction: nextcord.Interaction,
+    direction: str = nextcord.SlashOption(
+        name="direction",
+        description="the direction you want to move (examples: north, left)",
+        required=True
+        )
+    ):
+    await interaction.response.defer(with_message=True)
+    with interaction.channel.typing():
+        userid = int(interaction.user.id)
+        conn = None
+        try:
+            conn = sqlite3.connect('db/main.db')
+            cur = conn.cursor()
+            print(sqlite3.version)
+            print('connected')
+            tableu = """ CREATE TABLE IF NOT EXISTS users (
+                userid TEXT UNIQUE ON CONFLICT IGNORE,
+                map_x INT,
+                map_y INT
+                ); """
+            tableinv = """ CREATE TABLE IF NOT EXISTS inv (
+                itemid TEXT,
+                count INT,
+                owner TEXT
+                ); """
+            cur.execute(tableu)
+            print("users table is created")
+            cur.execute(tableinv)
+            print("inv table is created")
+            cur.execute("""SELECT userid
+                            FROM users
+                            WHERE userid=?;""",
+                            (str(userid), ))
+            result = cur.fetchone()
+            if result:
+                print('userid already exists')
+                if direction == "north" or direction == "up":
+                    cur.execute("""UPDATE users
+                                    SET map_y = map_y - 1
+                                    WHERE userid = ?;""",
+                                    (str(userid), ))
+                elif direction == "south" or direction == "down":
+                    cur.execute("""UPDATE users
+                                    SET map_y = map_y + 1
+                                    WHERE userid = ?;""",
+                                    (str(userid), ))
+                elif direction == "east" or direction == "right":
+                    cur.execute("""UPDATE users
+                                    SET map_x = map_x + 1
+                                    WHERE userid = ?;""",
+                                    (str(userid), ))
+                elif direction == "west" or direction == "left":
+                    cur.execute("""UPDATE users
+                                    SET map_x = map_x - 1
+                                    WHERE userid = ?;""",
+                                    (str(userid), ))
+                cur.execute("""SELECT map_x, map_y
+                                FROM users
+                                WHERE userid=?;""",
+                                (str(userid), ))
+                result = cur.fetchone()
+                if result:
+                    px_list = getloc(result[0],result[1])
+                    txt = ""
+                    newline = 0
+                    for n in px_list:
+                        if n == "plains":
+                            txt = txt + ":green_square:"
+                            newline += 1
+                        if n == "river":
+                            txt = txt + ":blue_square:"
+                            newline += 1
+                        if n == "forest":
+                            txt = txt + ":deciduous_tree:"
+                            newline += 1
+                        if n == "desert":
+                            txt = txt + ":yellow_square:"
+                            newline += 1
+                        if n == "void":
+                            txt = txt + ":black_large_square:"
+                            newline += 1
+                        if newline == 5:
+                            txt = txt + "\n"
+                            newline = 0
+                    embed=nextcord.Embed(title="Map",description=txt)
+            else:
+                cur.execute("INSERT INTO users(userid,map_x,map_y) values(?,?,?);", (str(userid), 8, 1))
+                print('inserted')
+            conn.commit()
+        except Error as e:
+            print(e)
+        finally:
+            if conn:
+                conn.close()
+                print('disconnected')
+        await interaction.send(embed=embed)
 bot.run(token)
