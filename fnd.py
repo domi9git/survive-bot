@@ -1,6 +1,6 @@
 import json
 import random
-def findi():
+def findi(biome):
     item_list = []
     common = []
     uncommon = []
@@ -12,22 +12,36 @@ def findi():
         load = json.load(file)
         for i in load[0]:
             if load[0][i]["rarity"] == 0:
-                common.append(i)
+                for j in load[0][i]["biomes"]:
+                    print(j)
+                    print(biome)
+                    if j == biome[0]:
+                        common.append(i)
         for i in load[0]:
             if load[0][i]["rarity"] == 1:
-                uncommon.append(i)
+                for j in load[0][i]["biomes"]:
+                    if j == biome[0]:
+                        uncommon.append(i)
         for i in load[0]:
             if load[0][i]["rarity"] == 2:
-                rare.append(i)
+                for j in load[0][i]["biomes"]:
+                    if j == biome[0]:
+                        rare.append(i)
         for i in load[0]:
             if load[0][i]["rarity"] == 3:
-                epic.append(i)
+                for j in load[0][i]["biomes"]:
+                    if j == biome[0]:
+                        epic.append(i)
         for i in load[0]:
             if load[0][i]["rarity"] == 4:
-                legendary.append(i)
+                for j in load[0][i]["biomes"]:
+                    if j == biome[0]:
+                        legendary.append(i)
         for i in load[0]:
             if load[0][i]["rarity"] == 5:
-                mythic.append(i)
+                for j in load[0][i]["biomes"]:
+                    if j == biome[0]:
+                        mythic.append(i)
         for i in range(0,10):
             if random.randrange(0,2) == 0:
                 rarities = ["common","uncommon","rare","epic","legendary","mythic"]
